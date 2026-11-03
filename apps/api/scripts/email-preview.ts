@@ -11,7 +11,6 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { ConfigService } from "@nestjs/config";
-import { PrismaPg } from "@prisma/adapter-pg";
 
 import { type Env, validateEnv } from "../src/config/env.schema.js";
 import { type Inquiry, InquiryStatus, PrismaClient } from "../src/generated/prisma/client.js";
@@ -21,10 +20,11 @@ import {
 } from "../src/modules/notifications/inquiry-emails.js";
 import { Mailer, withInlineLogo } from "../src/modules/notifications/mailer.js";
 import { NotificationsService } from "../src/modules/notifications/notifications.service.js";
+import { createMariaDbAdapter } from "../src/prisma/mariadb.js";
 import type { PrismaService } from "../src/prisma/prisma.service.js";
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  adapter: createMariaDbAdapter(process.env.DATABASE_URL!),
 });
 
 const sample: Inquiry = {

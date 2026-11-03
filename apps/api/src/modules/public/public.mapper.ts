@@ -17,6 +17,7 @@ import {
 } from "@taj/types";
 
 import type { Prisma } from "../../generated/prisma/client.js";
+import { toStringList } from "../../prisma/json.js";
 
 /** Converts DB rows to the public response shapes in @taj/types. */
 
@@ -49,9 +50,9 @@ export function toSettings(
     weddingsPerformed: s.weddingsPerformed,
     netflixUrl: s.netflixUrl,
     socials: (s.socials ?? {}) as Socials,
-    serviceAreas: s.serviceAreas,
+    serviceAreas: toStringList(s.serviceAreas),
     whatsappDefaultMessage: s.whatsappDefaultMessage,
-    ticker: s.ticker,
+    ticker: toStringList(s.ticker),
     netflixBlurb: s.netflixBlurb,
     seoSiteTitle: s.seoSiteTitle,
     seoDescription: s.seoDescription,
@@ -90,7 +91,7 @@ export function toServiceDetail(
     shortDescription: s.shortDescription,
     intro: s.intro,
     sections: (s.sections ?? []) as ServiceDetail["sections"],
-    inclusions: s.inclusions,
+    inclusions: toStringList(s.inclusions),
     areaCopy: s.areaCopy,
     heroImage: toImage(s.heroImage),
     gallery: s.galleryItems.map((g) => toImage(g.media)).filter((i): i is ImageAsset => i !== null),
@@ -107,7 +108,7 @@ export const toPackage = (p: Prisma.PackageModel): Package => ({
   tagline: p.tagline,
   startingPrice: p.startingPrice,
   priceNote: p.priceNote,
-  inclusions: p.inclusions,
+  inclusions: toStringList(p.inclusions),
   highlighted: p.highlighted,
 });
 

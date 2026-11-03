@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 
 import type { Env } from "../../config/env.schema.js";
 import type { Inquiry } from "../../generated/prisma/client.js";
+import { toStringList } from "../../prisma/json.js";
 import { PrismaService } from "../../prisma/prisma.service.js";
 import type { EmailBrand } from "./email-layout.js";
 import { clientInquiryEmail, teamInquiryEmail } from "./inquiry-emails.js";
@@ -86,7 +87,7 @@ export class NotificationsService {
     const [s, rows] = await Promise.all([
       this.prisma.siteSettings.findUniqueOrThrow({ where: { id: 1 } }),
       this.prisma.service.findMany({
-        where: { slug: { in: inquiry.services } },
+        where: { slug: { in: toStringList(inquiry.services) } },
         select: { slug: true, title: true },
       }),
     ]);
@@ -102,7 +103,7 @@ export class NotificationsService {
       foundedYear: s.foundedYear,
       socials: (s.socials ?? {}) as EmailBrand["socials"],
     };
-    const services = inquiry.services.map(
+    const services = toStringList(inquiry.services).map(
       (slug) => rows.find((r) => r.slug === slug)?.title ?? slug,
     );
     return { brand, services };

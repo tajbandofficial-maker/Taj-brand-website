@@ -10,7 +10,7 @@ Architecture and build spec: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | `packages/types` | Shared zod schemas + TS types (`@taj/types`)            |
 | `design/`        | Source page designs (self-unpacking `.dc.html` bundles) |
 | `packages/*`     | Shared `tsconfig` and ESLint configs                    |
-| `infra`          | Docker Compose files (dev: Postgres + optional Mailpit) |
+| `infra`          | Docker Compose files (dev: MySQL + optional Mailpit)    |
 
 ## Local setup
 
@@ -20,7 +20,7 @@ Requires Node 22+, pnpm 10, and Docker.
 pnpm install
 cp apps/api/.env.example apps/api/.env          # set the secrets, local storage + SEED_ADMIN_* (see comments)
 cp apps/web/.env.example apps/web/.env.local    # INTERNAL_API_TOKEN + REVALIDATE_SECRET must match the API's
-pnpm db:up                                      # Postgres :5432 + RustFS media storage :9000
+pnpm db:up                                      # MySQL :3306 + RustFS media storage :9000
 pnpm --filter api prisma migrate dev            # apply migrations
 pnpm --filter api prisma db seed                # client content + first admin (from SEED_ADMIN_*)
 pnpm dev                                        # web on :3000, api on :4000
@@ -52,7 +52,7 @@ After changing `.env` files, restart `pnpm dev` (servers read them at start-up).
 | `pnpm typecheck`                  | `tsc --noEmit` everywhere                                        |
 | `pnpm test`                       | Unit tests (Vitest, API)                                         |
 | `pnpm format`                     | Prettier                                                         |
-| `pnpm db:up/down`                 | Start/stop dev Postgres + media storage                          |
+| `pnpm db:up/down`                 | Start/stop dev MySQL + media storage                             |
 | `pnpm --filter api email:preview` | Render the inquiry emails to `apps/api/email-previews/`          |
 | `pnpm --filter api email:test`    | Send both sample emails to `BUSINESS_EMAIL` (checks Gmail setup) |
 

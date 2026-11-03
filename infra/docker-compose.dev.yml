@@ -1,12 +1,38 @@
 # Local development services only. The apps themselves run natively via `pnpm dev`.
-#   pnpm db:up   → Postgres (localhost:5432) + RustFS, an S3-compatible stand-in for
+#   pnpm db:up   → MySQL 8.4 (localhost:3306) + RustFS, an S3-compatible stand-in for
 #                  Cloudflare R2 (localhost:9000)
 #   docker compose -f infra/docker-compose.dev.yml --profile mail up -d → also Mailpit (UI on :8025)
+#   docker compose -f infra/docker-compose.dev.yml --profile legacy up -d legacy-postgres
+#                → the old PostgreSQL database (localhost:5432), only to copy its data into MySQL
+#                  with `pnpm --filter api db:copy-from-postgres`. Its volume is kept untouched.
 name: taj-band-dev
 
 services:
   db:
+    # Same engine family as Hostinger's MySQL databases.
+    image: mysql:8.4
+    environment:
+      MYSQL_USER: taj
+      MYSQL_PASSWORD: taj
+      MYSQL_DATABASE: tajband
+      MYSQL_ROOT_PASSWORD: taj-root
+      TZ: Asia/Kolkata
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -utaj -ptaj --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # Old PostgreSQL dev database (pre-MySQL). Not started by `pnpm db:up`.
+  legacy-postgres:
     image: postgres:16-alpine
+    profiles: [legacy]
     environment:
       POSTGRES_USER: taj
       POSTGRES_PASSWORD: taj
@@ -16,12 +42,6 @@ services:
       - "5432:5432"
     volumes:
       - pg_data_dev:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U taj -d tajband"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
 
   # S3-compatible stand-in for Cloudflare R2 (API on :9000). The API creates the
   # public "taj-media" bucket + CORS on startup in development.
@@ -45,5 +65,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  mysql_data_dev:
+  # Old PostgreSQL data — kept so nothing is lost. Remove only after the copy is verified.
   pg_data_dev:
   storage_data_dev:

@@ -1,7 +1,7 @@
 import { validateEnv } from "./env.schema.js";
 
 const valid = {
-  DATABASE_URL: "postgresql://taj:taj@localhost:5432/tajband",
+  DATABASE_URL: "mysql://taj:taj@localhost:3306/tajband",
   JWT_SECRET: "x".repeat(64),
   INTERNAL_API_TOKEN: "y".repeat(32),
   WEB_INTERNAL_URL: "http://localhost:3000",
@@ -25,8 +25,14 @@ describe("validateEnv", () => {
     expect(() => validateEnv({ ...valid, JWT_SECRET: "short" })).toThrow(/JWT_SECRET/);
   });
 
-  it("requires storage and email in production, but not Cloudflare or Turnstile", () => {
-    expect(() => validateEnv({ ...valid, NODE_ENV: "production" })).toThrow(/R2_BUCKET/);
+  it("requires email in production; storage is all-or-nothing; Cloudflare/Turnstile optional", () => {
+    const mail = { SMTP_USER: "band@gmail.com", SMTP_PASS: "app-password" };
+    const base = { ...valid, ...mail, NODE_ENV: "production", BUSINESS_EMAIL: "band@gmail.com" };
+    expect(() => validateEnv({ ...valid, NODE_ENV: "production" })).toThrow(/SMTP_USER/);
+    // No storage at all: allowed (uploads disabled).
+    expect(validateEnv(base).R2_BUCKET).toBeUndefined();
+    // Half-configured storage: rejected.
+    expect(() => validateEnv({ ...base, R2_ACCOUNT_ID: "abc" })).toThrow(/R2_BUCKET/);
     const prod = validateEnv({
       ...valid,
       NODE_ENV: "production",

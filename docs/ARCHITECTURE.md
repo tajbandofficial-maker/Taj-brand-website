@@ -34,30 +34,30 @@
 
 ## 2. Tech Stack
 
-| Layer                  | Technology                                                        | Notes                                                      |
-| ---------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------- |
-| Runtime                | **Node.js 22 LTS**                                                | Same version in dev, CI, and Docker images.                |
-| Package manager        | **pnpm** (workspaces)                                             | Lockfile committed.                                        |
-| Monorepo orchestration | **Turborepo**                                                     | `turbo prune` used for lean Docker builds.                 |
-| Frontend               | **Next.js (latest stable, 15+), App Router, TypeScript (strict)** | `output: "standalone"`.                                    |
-| Styling                | **Tailwind CSS v4**                                               | Design tokens via `@theme` in CSS.                         |
-| Fonts                  | **next/font**                                                     | Self-hosted, `display: swap`.                              |
-| Admin UI               | Custom components, **TanStack Query**, **Formik**, **Zustand**    | Admin route group only. See §18.                           |
-| Backend                | **NestJS 12, TypeScript (strict)**                                | REST, internal only. ESM (`nodenext`), Vitest.             |
-| ORM / DB               | **Prisma 7**, **PostgreSQL 16**                                   | Migrations committed. Driver adapter `@prisma/adapter-pg`. |
-| Validation             | **zod** (shared types), **class-validator** (Nest DTOs)           | Inquiry form: dependency-free validator (§18).             |
-| Auth                   | JWT (access token) + bcrypt                                       | Token lives in an httpOnly cookie set by Next.js.          |
-| Media storage          | **Cloudflare R2** (S3-compatible)                                 | Public bucket on `media.<domain>`; presigned uploads.      |
-| Image optimisation     | **next/image** + **sharp**                                        | Optimised images cached by Cloudflare.                     |
-| Video                  | **YouTube** embeds with a click-to-load facade                    | No self-hosted video.                                      |
-| Email                  | **Resend**                                                        | Inquiry notifications to client.                           |
-| Spam protection        | **Cloudflare Turnstile** + honeypot + `@nestjs/throttler`         |                                                            |
-| Analytics              | **GA4** via `@next/third-parties`                                 | Event tracking for calls/WhatsApp/form.                    |
-| Reverse proxy          | **Caddy 2**                                                       | TLS via Cloudflare Origin Certificate.                     |
-| CDN / DNS / WAF        | **Cloudflare (Free plan)**                                        |                                                            |
-| Containers             | **Docker + Docker Compose**                                       |                                                            |
-| CI/CD                  | **GitHub Actions** → **GHCR** → SSH deploy                        | Images are built in CI, never on the VPS.                  |
-| Hosting                | 1× VPS, 2 vCPU / 2–4 GB RAM, India region (Mumbai/Bangalore)      | Ubuntu 24.04 LTS.                                          |
+| Layer                  | Technology                                                        | Notes                                                                                                                                 |
+| ---------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime                | **Node.js 22 LTS**                                                | Same version in dev, CI, and Docker images.                                                                                           |
+| Package manager        | **pnpm** (workspaces)                                             | Lockfile committed.                                                                                                                   |
+| Monorepo orchestration | **Turborepo**                                                     | `turbo prune` used for lean Docker builds.                                                                                            |
+| Frontend               | **Next.js (latest stable, 15+), App Router, TypeScript (strict)** | `output: "standalone"`.                                                                                                               |
+| Styling                | **Tailwind CSS v4**                                               | Design tokens via `@theme` in CSS.                                                                                                    |
+| Fonts                  | **next/font**                                                     | Self-hosted, `display: swap`.                                                                                                         |
+| Admin UI               | Custom components, **TanStack Query**, **Formik**, **Zustand**    | Admin route group only. See §18.                                                                                                      |
+| Backend                | **NestJS 12, TypeScript (strict)**                                | REST, internal only. ESM (`nodenext`), Vitest.                                                                                        |
+| ORM / DB               | **Prisma 7**, **MySQL 8 / MariaDB** (Hostinger MySQL)             | Migrations committed. Driver adapter `@prisma/adapter-mariadb`. Moved from PostgreSQL 16 on 2026-11-03 — see docs/HOSTINGER-MYSQL.md. |
+| Validation             | **zod** (shared types), **class-validator** (Nest DTOs)           | Inquiry form: dependency-free validator (§18).                                                                                        |
+| Auth                   | JWT (access token) + bcrypt                                       | Token lives in an httpOnly cookie set by Next.js.                                                                                     |
+| Media storage          | **Cloudflare R2** (S3-compatible)                                 | Public bucket on `media.<domain>`; presigned uploads.                                                                                 |
+| Image optimisation     | **next/image** + **sharp**                                        | Optimised images cached by Cloudflare.                                                                                                |
+| Video                  | **YouTube** embeds with a click-to-load facade                    | No self-hosted video.                                                                                                                 |
+| Email                  | **Resend**                                                        | Inquiry notifications to client.                                                                                                      |
+| Spam protection        | **Cloudflare Turnstile** + honeypot + `@nestjs/throttler`         |                                                                                                                                       |
+| Analytics              | **GA4** via `@next/third-parties`                                 | Event tracking for calls/WhatsApp/form.                                                                                               |
+| Reverse proxy          | **Caddy 2**                                                       | TLS via Cloudflare Origin Certificate.                                                                                                |
+| CDN / DNS / WAF        | **Cloudflare (Free plan)**                                        |                                                                                                                                       |
+| Containers             | **Docker + Docker Compose**                                       |                                                                                                                                       |
+| CI/CD                  | **GitHub Actions** → **GHCR** → SSH deploy                        | Images are built in CI, never on the VPS.                                                                                             |
+| Hosting                | 1× VPS, 2 vCPU / 2–4 GB RAM, India region (Mumbai/Bangalore)      | Ubuntu 24.04 LTS.                                                                                                                     |
 
 ---
 

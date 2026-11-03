@@ -1,5 +1,12 @@
 // Prisma 7: the connection URL lives in prisma.config.ts (datasource.url),
-// and PrismaClient connects through the @prisma/adapter-pg driver adapter.
+// and PrismaClient connects through the @prisma/adapter-mariadb driver adapter
+// (works with MySQL 8 and MariaDB 10.6+, e.g. Hostinger's MySQL databases).
+//
+// MySQL notes:
+// - A plain `String` is VARCHAR(191). Free text uses @db.Text (64 KB) so nothing is truncated.
+// - MySQL has no array columns: lists of strings are stored as Json (a JSON array of strings).
+// - MySQL can't default a JSON column, so Json fields get their defaults in code
+//   (src/prisma/json-defaults.ts).
 generator client {
   provider            = "prisma-client"
   output              = "../src/generated/prisma"
@@ -8,14 +15,14 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 model AdminUser {
   id           String    @id @default(cuid())
-  email        String    @unique
+  email        String    @unique @db.VarChar(255)
   passwordHash String
-  name         String
+  name         String    @db.VarChar(255)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -23,12 +30,12 @@ model AdminUser {
 
 model Media {
   id        String   @id @default(cuid())
-  key       String   @unique // R2 object key (content-hashed)
-  url       String // public URL on media.<domain>
+  key       String   @unique @db.VarChar(512) // R2 object key (content-hashed)
+  url       String   @db.Text // public URL on media.<domain>
   mimeType  String
   width     Int?
   height    Int?
-  alt       String // required
+  alt       String   @db.Text // required
   createdAt DateTime @default(now())
 
   serviceHeroes   Service[]      @relation("ServiceHero")
@@ -43,17 +50,17 @@ model Media {
 model Service {
   id               String        @id @default(cuid())
   slug             String        @unique
-  title            String // nav/card title, e.g. "Brass Band & Baraat"
-  h1               String // SEO H1
-  shortDescription String // card text
-  intro            String // opening paragraph
-  sections         Json          @default("[]") // [{ heading: string, body: string }]
-  inclusions       String[]
-  areaCopy         String? // area-served paragraph
+  title            String        @db.Text // nav/card title, e.g. "Brass Band & Baraat"
+  h1               String        @db.Text // SEO H1
+  shortDescription String        @db.Text // card text
+  intro            String        @db.Text // opening paragraph
+  sections         Json // [{ heading: string, body: string }]
+  inclusions       Json // string[]
+  areaCopy         String?       @db.Text // area-served paragraph
   heroImageId      String?
   heroImage        Media?        @relation("ServiceHero", fields: [heroImageId], references: [id], onDelete: SetNull)
-  seoTitle         String?
-  seoDescription   String?
+  seoTitle         String?       @db.Text
+  seoDescription   String?       @db.Text
   ogImageId        String? // social share image; falls back to the hero photo
   ogImage          Media?        @relation("ServiceOgImage", fields: [ogImageId], references: [id], onDelete: SetNull)
   order            Int           @default(0)
@@ -69,11 +76,11 @@ model Service {
 model Package {
   id            String    @id @default(cuid())
   slug          String    @unique
-  name          String // Classic / Royal / Maharaja
-  tagline       String?
+  name          String    @db.Text // Classic / Royal / Maharaja
+  tagline       String?   @db.Text
   startingPrice Int? // INR; null → "Price on request"
-  priceNote     String? // e.g. "per baraat, Delhi-NCR"
-  inclusions    String[]
+  priceNote     String?   @db.Text // e.g. "per baraat, Delhi-NCR"
+  inclusions    Json // string[]
   highlighted   Boolean   @default(false)
   order         Int       @default(0)
   published     Boolean   @default(false)
@@ -84,8 +91,8 @@ model Package {
 
 model AddOn {
   id            String   @id @default(cuid())
-  name          String
-  description   String?
+  name          String   @db.Text
+  description   String?  @db.Text
   startingPrice Int?
   serviceId     String? // optional service page the add-on links to
   service       Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
@@ -98,8 +105,8 @@ model AddOn {
 /// One row of the /packages comparison table; `values` follow published package order.
 model PackageComparisonRow {
   id        String   @id @default(cuid())
-  label     String
-  values    String[]
+  label     String   @db.Text
+  values    Json // string[]
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -127,7 +134,7 @@ model GalleryItem {
   mediaId   String? // required when IMAGE; poster when VIDEO
   media     Media?          @relation(fields: [mediaId], references: [id], onDelete: SetNull)
   youtubeId String? // required when VIDEO
-  caption   String? // video title / photo caption
+  caption   String?         @db.Text // video title / photo caption
   serviceId String? // also show on this service's page
   service   Service?        @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   order     Int             @default(0)
@@ -144,10 +151,10 @@ enum ReviewSource {
 
 model Review {
   id        String       @id @default(cuid())
-  author    String
+  author    String       @db.Text
   rating    Int // 1–5 (validate)
-  text      String
-  meta      String? // e.g. "Royal package · Gurugram"
+  text      String       @db.Text
+  meta      String?      @db.Text // e.g. "Royal package · Gurugram"
   source    ReviewSource
   imageId   String? // photo for high-profile weddings
   image     Media?       @relation("ReviewImage", fields: [imageId], references: [id], onDelete: SetNull)
@@ -161,8 +168,8 @@ model Review {
 
 model Faq {
   id        String   @id @default(cuid())
-  question  String
-  answer    String
+  question  String   @db.Text
+  answer    String   @db.Text
   serviceId String? // null = global FAQ
   service   Service? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   order     Int      @default(0)
@@ -181,17 +188,17 @@ enum InquiryStatus {
 
 model Inquiry {
   id          String        @id @default(cuid())
-  name        String
+  name        String        @db.VarChar(255)
   phone       String
-  email       String? // optional: gets the confirmation email
+  email       String?       @db.VarChar(255) // optional: gets the confirmation email
   weddingDate DateTime?
-  venue       String?
-  services    String[] // service slugs
-  message     String?
-  sourcePage  String?
+  venue       String?       @db.VarChar(255)
+  services    Json // string[] of service slugs
+  message     String?       @db.Text
+  sourcePage  String?       @db.Text
   ip          String?
   status      InquiryStatus @default(NEW)
-  notes       String?
+  notes       String?       @db.Text
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -200,33 +207,33 @@ model Inquiry {
 
 model SiteSettings {
   id                     Int      @id @default(1) // singleton
-  businessName           String   @default("Taj Band")
-  tagline                String   @default("Old Is Gold")
+  businessName           String   @default("Taj Band") @db.VarChar(255)
+  tagline                String   @default("Old Is Gold") @db.VarChar(255)
   phone                  String
   whatsapp               String // E.164 without "+", e.g. 91XXXXXXXXXX
   altPhone               String? // second number, shown beside the main phone
-  email                  String?
-  addressLine            String
-  city                   String
+  email                  String?  @db.VarChar(255)
+  addressLine            String   @db.Text
+  city                   String   @db.VarChar(255)
   postalCode             String?
   geoLat                 Float?
   geoLng                 Float?
-  hours                  Json     @default("[]") // [{ days: string[], opens: "09:00", closes: "21:00" }]
-  mapEmbedUrl            String?
+  hours                  Json // [{ days: string[], opens: "09:00", closes: "21:00" }]
+  mapEmbedUrl            String?  @db.Text
   googleRating           Float?
   googleReviewCount      Int?
-  googleProfileUrl       String?
+  googleProfileUrl       String?  @db.Text
   foundedYear            Int?
   weddingsPerformed      Int?
-  netflixUrl             String?
-  socials                Json     @default("{}") // { instagram, facebook, youtube }
-  serviceAreas           String[] @default(["Delhi", "Noida", "Gurugram", "Ghaziabad", "Faridabad"])
-  whatsappDefaultMessage String   @default("Hi Taj Band, I'd like to check availability for my wedding.")
-  ticker                 String[] @default(["Brass Band", "Dhol", "Shehnai", "Vintage Cars", "Royal Chattar", "Baraat Lighting"])
-  netflixBlurb           String? // short line under "As seen on Netflix"
+  netflixUrl             String?  @db.Text
+  socials                Json // { instagram, facebook, youtube }
+  serviceAreas           Json // string[]
+  whatsappDefaultMessage String   @default("Hi Taj Band, I'd like to check availability for my wedding.") @db.VarChar(1000)
+  ticker                 Json // string[]
+  netflixBlurb           String?  @db.Text // short line under "As seen on Netflix"
   // Site-wide SEO: title of the home page and suffix of every other title, plus fallbacks.
-  seoSiteTitle           String   @default("Taj Band — Wedding Band & Baraat, Delhi")
-  seoDescription         String?
+  seoSiteTitle           String   @default("Taj Band — Wedding Band & Baraat, Delhi") @db.VarChar(500)
+  seoDescription         String?  @db.Text
   ogImageId              String? // default social share image
   ogImage                Media?   @relation("SiteOgImage", fields: [ogImageId], references: [id], onDelete: SetNull)
   updatedAt              DateTime @updatedAt
@@ -236,12 +243,12 @@ model SiteSettings {
 /// `fields` holds only what the admin saved; the site falls back to each field's default.
 model PageContent {
   key            String   @id // "home", "about", …
-  fields         Json     @default("{}") // { [fieldKey]: string }
+  fields         Json // { [fieldKey]: string }
   heroImageId    String?
   heroImage      Media?   @relation("PageHero", fields: [heroImageId], references: [id], onDelete: SetNull)
   youtubeId      String?
-  seoTitle       String?
-  seoDescription String?
+  seoTitle       String?  @db.Text
+  seoDescription String?  @db.Text
   ogImageId      String? // social share image
   ogImage        Media?   @relation("PageOgImage", fields: [ogImageId], references: [id], onDelete: SetNull)
   updatedAt      DateTime @updatedAt

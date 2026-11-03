@@ -16,7 +16,6 @@
  */
 import "dotenv/config";
 
-import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
 import {
@@ -25,9 +24,10 @@ import {
   PrismaClient,
   ReviewSource,
 } from "../src/generated/prisma/client.js";
+import { createMariaDbAdapter } from "../src/prisma/mariadb.js";
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  adapter: createMariaDbAdapter(process.env.DATABASE_URL!),
 });
 
 /**
@@ -1230,7 +1230,7 @@ async function main() {
   const home = { heroImageId: homeHero.id, youtubeId: videos[0]![0] };
   await prisma.pageContent.upsert({
     where: { key: "home" },
-    create: { key: "home", ...home },
+    create: { key: "home", fields: {}, ...home },
     update: refreshes("pages") ? home : {},
   });
   const about = await prisma.pageContent.findUnique({ where: { key: "about" } });

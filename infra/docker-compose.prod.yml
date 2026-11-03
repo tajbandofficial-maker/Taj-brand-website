@@ -58,7 +58,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: "4000"
-      DATABASE_URL: postgresql://taj:${POSTGRES_PASSWORD}@db:5432/tajband
+      DATABASE_URL: mysql://taj:${DB_PASSWORD}@db:3306/tajband
       JWT_SECRET: ${JWT_SECRET:?run infra/setup.sh}
       INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
       REVALIDATE_SECRET: ${REVALIDATE_SECRET}
@@ -91,17 +91,19 @@ services:
     logging: *logging
 
   db:
-    image: postgres:16-alpine
+    image: mysql:8.4
     restart: unless-stopped
     environment:
-      POSTGRES_USER: taj
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run infra/setup.sh}
-      POSTGRES_DB: tajband
+      MYSQL_USER: taj
+      MYSQL_PASSWORD: ${DB_PASSWORD:?run infra/setup.sh}
+      MYSQL_DATABASE: tajband
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       TZ: Asia/Kolkata
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U taj -d tajband"]
+      test: ["CMD-SHELL", 'mysqladmin ping -h 127.0.0.1 -utaj -p"$$MYSQL_PASSWORD" --silent']
       interval: 5s
       timeout: 3s
       retries: 20
@@ -118,7 +120,7 @@ services:
     logging: *logging
 
 volumes:
-  pg_data:
+  mysql_data:
   storage_data:
   caddy_data:
   caddy_config:

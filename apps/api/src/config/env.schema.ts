@@ -13,7 +13,9 @@ export const envSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().int().positive().default(4000),
-    DATABASE_URL: z.url(),
+    DATABASE_URL: z
+      .url()
+      .refine((v) => /^(mysql|mariadb):\/\//.test(v), "DATABASE_URL must be a mysql:// URL"),
     JWT_SECRET: secret(32),
     INTERNAL_API_TOKEN: secret(32),
     WEB_INTERNAL_URL: z.url(),
@@ -66,13 +68,18 @@ export const envSchema = z
       });
     }
     // Cloudflare purge and Turnstile stay optional: the site works without them (VPS-only setup).
-    const requiredInProd = [
+    // Image storage is optional too (e.g. Hostinger Node.js hosting before R2 is set up): the site
+    // runs and only admin uploads are disabled. Once any storage setting is given, all are required.
+    const storageKeys = [
       "R2_ACCESS_KEY_ID",
       "R2_SECRET_ACCESS_KEY",
       "R2_BUCKET",
       "R2_PUBLIC_BASE_URL",
     ] as const;
-    if (!env.R2_ENDPOINT && !env.R2_ACCOUNT_ID) {
+    const storageStarted =
+      storageKeys.some((k) => env[k]) || Boolean(env.R2_ENDPOINT || env.R2_ACCOUNT_ID);
+    const requiredInProd = storageStarted ? storageKeys : [];
+    if (storageStarted && !env.R2_ENDPOINT && !env.R2_ACCOUNT_ID) {
       ctx.addIssue({
         code: "custom",
         path: ["R2_ENDPOINT"],

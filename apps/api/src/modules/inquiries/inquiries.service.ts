@@ -63,9 +63,9 @@ export class InquiriesService {
       ...(q
         ? {
             OR: [
-              { name: { contains: q, mode: "insensitive" } },
+              { name: { contains: q } }, // MySQL utf8mb4_unicode_ci: case-insensitive
               { phone: { contains: q.replace(/\D/g, "") || q } },
-              { venue: { contains: q, mode: "insensitive" } },
+              { venue: { contains: q } },
             ],
           }
         : {}),

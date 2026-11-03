@@ -24,3 +24,7 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
+
+# local database dumps (contain customer data)
+backups/
+infra/backups/
