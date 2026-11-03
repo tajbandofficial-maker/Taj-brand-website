@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "turbo dev",
-    "build": "turbo build",
+    "build": "node scripts/build.mjs",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
@@ -16,7 +16,7 @@
     "db:up": "docker compose -f infra/docker-compose.dev.yml up -d",
     "db:down": "docker compose -f infra/docker-compose.dev.yml down",
     "build:api": "pnpm --filter @taj/types build && pnpm --filter api generate && pnpm --filter api build && pnpm --filter api exec prisma migrate deploy",
-    "build:web": "pnpm --filter @taj/types build && pnpm --filter web build && node scripts/web-standalone-assets.mjs",
+    "build:web": "pnpm --filter @taj/types build && pnpm --filter web exec next build --webpack && node scripts/web-standalone-assets.mjs",
     "start:api": "node apps/api/dist/main.js",
     "start:web": "node apps/web/.next/standalone/apps/web/server.js"
   },
