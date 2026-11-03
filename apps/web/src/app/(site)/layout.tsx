@@ -49,7 +49,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       >
         Skip to content
       </a>
-      <SiteHeader settings={settings} />
+      <SiteHeader settings={settings} services={services} />
       <main id="main">{children}</main>
       <SiteFooter settings={settings} services={services} />
       <FloatingEnquiry
