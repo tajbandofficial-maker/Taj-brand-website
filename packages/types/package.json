@@ -1,0 +1,35 @@
+{
+  "name": "@taj/types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./inquiry": {
+      "types": "./dist/inquiry.d.ts",
+      "default": "./dist/inquiry.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@taj/eslint-config": "workspace:*",
+    "@taj/tsconfig": "workspace:*",
+    "eslint": "^9.39.0",
+    "typescript": "^5.9.3"
+  },
+  "sideEffects": false
+}

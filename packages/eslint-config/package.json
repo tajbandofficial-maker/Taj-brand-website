@@ -1,0 +1,22 @@
+{
+  "name": "@taj/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.js",
+    "./next": "./next.js",
+    "./nest": "./nest.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint-config-next": "16.3.8",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "globals": "^16.5.0",
+    "typescript-eslint": "^8.71.1"
+  },
+  "peerDependencies": {
+    "eslint": "^9"
+  }
+}

@@ -1,0 +1,248 @@
+// Prisma 7: the connection URL lives in prisma.config.ts (datasource.url),
+// and PrismaClient connects through the @prisma/adapter-pg driver adapter.
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  key       String   @unique // R2 object key (content-hashed)
+  url       String // public URL on media.<domain>
+  mimeType  String
+  width     Int?
+  height    Int?
+  alt       String // required
+  createdAt DateTime @default(now())
+
+  serviceHeroes   Service[]      @relation("ServiceHero")
+  galleryItems    GalleryItem[]
+  reviewImages    Review[]       @relation("ReviewImage")
+  pageHeroes      PageContent[]  @relation("PageHero")
+  pageOgImages    PageContent[]  @relation("PageOgImage")
+  serviceOgImages Service[]      @relation("ServiceOgImage")
+  siteOgImages    SiteSettings[] @relation("SiteOgImage")
+}
+
+model Service {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  title            String // nav/card title, e.g. "Brass Band & Baraat"
+  h1               String // SEO H1
+  shortDescription String // card text
+  intro            String // opening paragraph
+  sections         Json          @default("[]") // [{ heading: string, body: string }]
+  inclusions       String[]
+  areaCopy         String? // area-served paragraph
+  heroImageId      String?
+  heroImage        Media?        @relation("ServiceHero", fields: [heroImageId], references: [id], onDelete: SetNull)
+  seoTitle         String?
+  seoDescription   String?
+  ogImageId        String? // social share image; falls back to the hero photo
+  ogImage          Media?        @relation("ServiceOgImage", fields: [ogImageId], references: [id], onDelete: SetNull)
+  order            Int           @default(0)
+  published        Boolean       @default(false)
+  faqs             Faq[]
+  relatedPackages  Package[]     @relation("ServicePackages")
+  galleryItems     GalleryItem[] // photos shown on this service's page
+  addOns           AddOn[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Package {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  name          String // Classic / Royal / Maharaja
+  tagline       String?
+  startingPrice Int? // INR; null → "Price on request"
+  priceNote     String? // e.g. "per baraat, Delhi-NCR"
+  inclusions    String[]
+  highlighted   Boolean   @default(false)
+  order         Int       @default(0)
+  published     Boolean   @default(false)
+  services      Service[] @relation("ServicePackages")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model AddOn {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  startingPrice Int?
+  serviceId     String? // optional service page the add-on links to
+  service       Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  order         Int      @default(0)
+  published     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+/// One row of the /packages comparison table; `values` follow published package order.
+model PackageComparisonRow {
+  id        String   @id @default(cuid())
+  label     String
+  values    String[]
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum GalleryType {
+  IMAGE
+  VIDEO
+}
+
+enum GalleryCategory {
+  BARAAT
+  BAND
+  DHOL
+  SHEHNAI
+  CARS_CHATTAR
+  LIGHTING
+  VIDEO
+}
+
+model GalleryItem {
+  id        String          @id @default(cuid())
+  type      GalleryType
+  category  GalleryCategory
+  mediaId   String? // required when IMAGE; poster when VIDEO
+  media     Media?          @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  youtubeId String? // required when VIDEO
+  caption   String? // video title / photo caption
+  serviceId String? // also show on this service's page
+  service   Service?        @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  order     Int             @default(0)
+  published Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+enum ReviewSource {
+  GOOGLE
+  DIRECT
+  HIGH_PROFILE
+}
+
+model Review {
+  id        String       @id @default(cuid())
+  author    String
+  rating    Int // 1–5 (validate)
+  text      String
+  meta      String? // e.g. "Royal package · Gurugram"
+  source    ReviewSource
+  imageId   String? // photo for high-profile weddings
+  image     Media?       @relation("ReviewImage", fields: [imageId], references: [id], onDelete: SetNull)
+  eventDate DateTime?
+  featured  Boolean      @default(false)
+  order     Int          @default(0)
+  published Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  serviceId String? // null = global FAQ
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  order     Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  BOOKED
+  LOST
+  SPAM
+}
+
+model Inquiry {
+  id          String        @id @default(cuid())
+  name        String
+  phone       String
+  email       String? // optional: gets the confirmation email
+  weddingDate DateTime?
+  venue       String?
+  services    String[] // service slugs
+  message     String?
+  sourcePage  String?
+  ip          String?
+  status      InquiryStatus @default(NEW)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model SiteSettings {
+  id                     Int      @id @default(1) // singleton
+  businessName           String   @default("Taj Band")
+  tagline                String   @default("Old Is Gold")
+  phone                  String
+  whatsapp               String // E.164 without "+", e.g. 91XXXXXXXXXX
+  altPhone               String? // second number, shown beside the main phone
+  email                  String?
+  addressLine            String
+  city                   String
+  postalCode             String?
+  geoLat                 Float?
+  geoLng                 Float?
+  hours                  Json     @default("[]") // [{ days: string[], opens: "09:00", closes: "21:00" }]
+  mapEmbedUrl            String?
+  googleRating           Float?
+  googleReviewCount      Int?
+  googleProfileUrl       String?
+  foundedYear            Int?
+  weddingsPerformed      Int?
+  netflixUrl             String?
+  socials                Json     @default("{}") // { instagram, facebook, youtube }
+  serviceAreas           String[] @default(["Delhi", "Noida", "Gurugram", "Ghaziabad", "Faridabad"])
+  whatsappDefaultMessage String   @default("Hi Taj Band, I'd like to check availability for my wedding.")
+  ticker                 String[] @default(["Brass Band", "Dhol", "Shehnai", "Vintage Cars", "Royal Chattar", "Baraat Lighting"])
+  netflixBlurb           String? // short line under "As seen on Netflix"
+  // Site-wide SEO: title of the home page and suffix of every other title, plus fallbacks.
+  seoSiteTitle           String   @default("Taj Band — Wedding Band & Baraat, Delhi")
+  seoDescription         String?
+  ogImageId              String? // default social share image
+  ogImage                Media?   @relation("SiteOgImage", fields: [ogImageId], references: [id], onDelete: SetNull)
+  updatedAt              DateTime @updatedAt
+}
+
+/// Copy, hero image, featured video and SEO of one fixed page (keys: pageDefs in @taj/types).
+/// `fields` holds only what the admin saved; the site falls back to each field's default.
+model PageContent {
+  key            String   @id // "home", "about", …
+  fields         Json     @default("{}") // { [fieldKey]: string }
+  heroImageId    String?
+  heroImage      Media?   @relation("PageHero", fields: [heroImageId], references: [id], onDelete: SetNull)
+  youtubeId      String?
+  seoTitle       String?
+  seoDescription String?
+  ogImageId      String? // social share image
+  ogImage        Media?   @relation("PageOgImage", fields: [ogImageId], references: [id], onDelete: SetNull)
+  updatedAt      DateTime @updatedAt
+}

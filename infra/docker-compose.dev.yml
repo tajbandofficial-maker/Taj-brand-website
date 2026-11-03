@@ -1,0 +1,49 @@
+# Local development services only. The apps themselves run natively via `pnpm dev`.
+#   pnpm db:up   → Postgres (localhost:5432) + RustFS, an S3-compatible stand-in for
+#                  Cloudflare R2 (localhost:9000)
+#   docker compose -f infra/docker-compose.dev.yml --profile mail up -d → also Mailpit (UI on :8025)
+name: taj-band-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: taj
+      POSTGRES_PASSWORD: taj
+      POSTGRES_DB: tajband
+      TZ: Asia/Kolkata
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taj -d tajband"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # S3-compatible stand-in for Cloudflare R2 (API on :9000). The API creates the
+  # public "taj-media" bucket + CORS on startup in development.
+  storage:
+    image: rustfs/rustfs:latest
+    environment:
+      RUSTFS_ACCESS_KEY: taj-dev
+      RUSTFS_SECRET_KEY: taj-dev-secret
+    ports:
+      - "9000:9000"
+    volumes:
+      - storage_data_dev:/data
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:latest
+    profiles: [mail]
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # web UI
+    restart: unless-stopped
+
+volumes:
+  pg_data_dev:
+  storage_data_dev:

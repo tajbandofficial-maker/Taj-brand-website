@@ -1,0 +1,26 @@
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# turbo
+.turbo/
+
+# env — only .env.example files are committed
+.env
+.env.*
+!.env.example
+
+# generated
+apps/api/src/generated/
+
+# misc
+coverage/
+*.log
+.DS_Store
+Thumbs.db

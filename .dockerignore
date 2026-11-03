@@ -1,0 +1,21 @@
+# Keep images small and secrets out of them.
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/*.tsbuildinfo
+**/coverage
+**/*.log
+.git
+.pnpm-store
+release
+
+# Secrets: real env files are passed at runtime, never baked in.
+**/.env
+**/.env.*
+!**/.env.example
+infra/.env
+
+# Generated / dev-only
+apps/api/src/generated
+apps/api/email-previews

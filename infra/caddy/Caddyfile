@@ -1,0 +1,31 @@
+# Caddy: HTTPS for every site below, certificates issued and renewed automatically.
+# DNS: point DOMAIN, www.DOMAIN and s3.DOMAIN (A records) at this server's IP first.
+{
+	email {$ACME_EMAIL}
+}
+
+# Website + admin
+{$DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+	reverse_proxy web:3000
+}
+
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
+# Uploaded images (public read) + admin uploads (presigned). Host header is passed
+# through unchanged, which the upload signatures depend on.
+s3.{$DOMAIN} {
+	request_body {
+		max_size 25MB
+	}
+	header Cache-Control "public, max-age=31536000, immutable"
+	reverse_proxy storage:9000
+}

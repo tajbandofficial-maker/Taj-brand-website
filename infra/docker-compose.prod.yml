@@ -1,0 +1,124 @@
+# Production stack for one VPS (e.g. Hostinger KVM). Values come from infra/.env
+# (create it with `bash infra/setup.sh`). Start/update with `bash infra/deploy.sh`.
+#
+#   https://DOMAIN      → web (website + admin)        ┐
+#   https://s3.DOMAIN   → storage (uploaded images)    ├ caddy: the only public ports (80/443),
+#   https://www.DOMAIN  → redirect to https://DOMAIN   ┘ automatic HTTPS (Let's Encrypt)
+#   api, db             → internal network only
+name: taj-band
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in infra/.env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in infra/.env}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web: { condition: service_healthy }
+    logging: *logging
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: https://${DOMAIN}
+        NEXT_PUBLIC_MEDIA_HOST: https://s3.${DOMAIN}
+    image: taj-band/web
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_SITE_URL: https://${DOMAIN}
+      NEXT_PUBLIC_MEDIA_HOST: https://s3.${DOMAIN}
+      API_INTERNAL_URL: http://api:4000
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?run infra/setup.sh}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:?run infra/setup.sh}
+    depends_on:
+      api: { condition: service_healthy }
+    logging: *logging
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: taj-band/api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      DATABASE_URL: postgresql://taj:${POSTGRES_PASSWORD}@db:5432/tajband
+      JWT_SECRET: ${JWT_SECRET:?run infra/setup.sh}
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET}
+      WEB_INTERNAL_URL: http://web:3000
+      PUBLIC_SITE_URL: https://${DOMAIN}
+      # Uploaded images: API talks to storage internally; browsers upload/view via https://s3.DOMAIN
+      R2_ENDPOINT: http://storage:9000
+      R2_PUBLIC_ENDPOINT: https://s3.${DOMAIN}
+      R2_PUBLIC_BASE_URL: https://s3.${DOMAIN}/taj-media
+      R2_BUCKET: taj-media
+      R2_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:?run infra/setup.sh}
+      R2_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:?run infra/setup.sh}
+      # Email (Gmail App Password, or Resend)
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      BUSINESS_EMAIL: ${BUSINESS_EMAIL:-}
+      INQUIRY_NOTIFY_EMAILS: ${INQUIRY_NOTIFY_EMAILS:-}
+      # Optional extras
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      CLOUDFLARE_ZONE_ID: ${CLOUDFLARE_ZONE_ID:-}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
+      # First admin account (used by the seed; the password is only set when the account is created)
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+    depends_on:
+      db: { condition: service_healthy }
+      storage: { condition: service_started }
+    logging: *logging
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: taj
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run infra/setup.sh}
+      POSTGRES_DB: tajband
+      TZ: Asia/Kolkata
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taj -d tajband"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: *logging
+
+  storage:
+    image: rustfs/rustfs:latest
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${STORAGE_SECRET_KEY}
+    volumes:
+      - storage_data:/data
+    logging: *logging
+
+volumes:
+  pg_data:
+  storage_data:
+  caddy_data:
+  caddy_config:
