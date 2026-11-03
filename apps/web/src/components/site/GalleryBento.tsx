@@ -5,12 +5,12 @@ import { useEffect, useMemo } from "react";
 
 import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/cn";
-import { bentoPattern, categoryFromSlug, galleryCategoryMeta } from "@/lib/gallery";
+import { bentoLayout, categoryFromSlug, galleryCategoryMeta } from "@/lib/gallery";
 import { type GalleryFilter, useGalleryStore } from "@/stores/gallery-store";
 
 import { type MediaItem, MediaLightbox } from "./MediaLightbox";
 
-const spanClass = { 1: "", 2: "col-span-2" } as const;
+const spanClass = { 1: "", 2: "col-span-2", 4: "col-span-2 gal:col-span-4" } as const;
 const rowClass = { 1: "", 2: "row-span-2" } as const;
 
 /** Filter chips + dense bento grid + lightbox. Filter is mirrored in ?category= for sharing. */
@@ -44,6 +44,7 @@ export function GalleryBento({ images }: { images: GalleryImage[] }) {
     () => (filter === "ALL" ? images : images.filter((i) => i.category === filter)),
     [images, filter],
   );
+  const layout = useMemo(() => bentoLayout(visible.length), [visible.length]);
   const media = useMemo<MediaItem[]>(
     () =>
       visible.map((i) => ({
@@ -83,10 +84,10 @@ export function GalleryBento({ images }: { images: GalleryImage[] }) {
       {/* Re-keyed per filter so the pop-in animation replays. */}
       <ul
         key={filter}
-        className="m-0 mt-6 grid list-none auto-rows-[clamp(140px,20vw,240px)] grid-flow-dense grid-cols-2 gap-3 p-0 gal:grid-cols-4"
+        className="m-0 mt-6 grid list-none auto-rows-[clamp(140px,20vw,240px)] grid-cols-2 gap-3 p-0 gal:grid-cols-4"
       >
         {visible.map((item, i) => {
-          const [cs, rs] = bentoPattern[i % bentoPattern.length] ?? [1, 1];
+          const { cols: cs, rows: rs } = layout[i] ?? { cols: 1, rows: 1 };
           return (
             <li
               key={item.id}
@@ -104,7 +105,7 @@ export function GalleryBento({ images }: { images: GalleryImage[] }) {
                   alt={item.image.alt}
                   fill
                   sizes={
-                    cs === 2 ? "(min-width: 700px) 600px, 100vw" : "(min-width: 700px) 300px, 50vw"
+                    cs > 1 ? "(min-width: 700px) 600px, 100vw" : "(min-width: 700px) 300px, 50vw"
                   }
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />

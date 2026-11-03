@@ -26,7 +26,8 @@ export function GalleryPreview({ images }: { images: GalleryImage[] }) {
 
   return (
     <>
-      <div className="grid auto-rows-[clamp(150px,18vw,210px)] grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] gap-3">
+      {/* Fixed 2 / 4 columns: the lead photo is 2×2 and the next four fill the rest exactly. */}
+      <div className="grid auto-rows-[clamp(140px,20vw,240px)] grid-flow-dense grid-cols-2 gap-3 md:grid-cols-4">
         {images.map((g, i) => (
           <button
             key={g.id}
@@ -40,7 +41,7 @@ export function GalleryPreview({ images }: { images: GalleryImage[] }) {
           >
             <ImageFrame
               image={g.image}
-              sizes={i === 0 ? "(min-width: 700px) 480px, 100vw" : "(min-width: 700px) 240px, 50vw"}
+              sizes={i === 0 ? "(min-width: 768px) 640px, 100vw" : "(min-width: 768px) 320px, 50vw"}
               className="size-full"
               imageClassName="transition-transform duration-500 group-hover:scale-105"
             />
