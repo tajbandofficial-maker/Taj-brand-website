@@ -68,6 +68,8 @@
   --animate-lb-open: lb-open 0.6s var(--ease-out-soft) both;
   --animate-lb-fade: lb-fade 0.8s ease-out both;
   --animate-lb-progress: lb-progress var(--lb-slide, 5s) linear both;
+  --animate-draw-x: draw-x 1.6s var(--ease-out-soft) 0.15s both;
+  --animate-draw-y: draw-y 1.6s var(--ease-out-soft) 0.15s both;
 
   @keyframes rise {
     from {
@@ -224,6 +226,16 @@
   @keyframes lb-fade {
     from {
       opacity: 0;
+    }
+  }
+  @keyframes draw-x {
+    from {
+      transform: scaleX(0);
+    }
+  }
+  @keyframes draw-y {
+    from {
+      transform: scaleY(0);
     }
   }
   @keyframes lb-progress {

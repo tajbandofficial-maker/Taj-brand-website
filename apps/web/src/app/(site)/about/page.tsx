@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { CountUp } from "@/components/site/CountUp";
+import { FamilyLegacy } from "@/components/site/FamilyLegacy";
 import { JourneyMap } from "@/components/site/JourneyMap";
 import { Reveal } from "@/components/site/Reveal";
 import { ReviewCard } from "@/components/site/ReviewCard";
@@ -22,6 +23,7 @@ import {
   getSiteSettings,
   getVideos,
 } from "@/lib/api/public";
+import { env } from "@/lib/env";
 import { toParagraphs } from "@/lib/format";
 import { FEATURED_SERVICES } from "@/lib/navigation";
 import { pageMetadata } from "@/lib/page-metadata";
@@ -52,9 +54,27 @@ export default async function AboutPage() {
     ...galleryVideos.filter((v) => v.youtubeId !== page.video?.youtubeId),
   ].slice(0, 3);
   const whatsappHref = buildWhatsAppUrl(settings.whatsapp, settings.whatsappDefaultMessage);
+  // Family history for search engines: founder, founding year, today's owners.
+  const person = (name: string) => ({
+    "@type": "Person",
+    name: name.replace(/^(Sh(ri)?\.?)\s+/i, "").replace(/\s+Ji$/i, ""),
+  });
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: settings.businessName,
+    url: env.NEXT_PUBLIC_SITE_URL,
+    ...(settings.foundedYear && { foundingDate: String(settings.foundedYear) }),
+    ...(t.gen1Name.trim() && { founder: person(t.gen1Name) }),
+    ...(t.gen4Name.trim() && { employee: { ...person(t.gen4Name), jobTitle: t.gen4Role } }),
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-cocoa-900 text-cream-50">
         <HeroBackdrop
@@ -171,6 +191,21 @@ export default async function AboutPage() {
           )}
         </Section>
       )}
+
+      {/* ── Four generations ─────────────────────────────────── */}
+      <FamilyLegacy
+        eyebrow={t.familyEyebrow}
+        title={t.familyTitle}
+        accent={t.familyAccent}
+        text={t.familyText}
+        since={settings.foundedYear}
+        generations={[
+          { role: t.gen1Role, name: t.gen1Name, text: t.gen1Text },
+          { role: t.gen2Role, name: t.gen2Name, text: t.gen2Text },
+          { role: t.gen3Role, name: t.gen3Name, text: t.gen3Text },
+          { role: t.gen4Role, name: t.gen4Name, text: t.gen4Text },
+        ]}
+      />
 
       {/* ── Why choose us ─────────────────────────────────────── */}
       <Section tone="sand" spacing="compact">

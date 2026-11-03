@@ -29,3 +29,6 @@ Thumbs.db
 # local database dumps (contain customer data)
 backups/
 infra/backups/
+
+# Original full-size client photos (424 MB). Optimised copies live in apps/web/public/photos.
+/image/

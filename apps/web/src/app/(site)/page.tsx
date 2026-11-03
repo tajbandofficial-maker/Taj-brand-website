@@ -26,6 +26,7 @@ import {
   getServices,
   getSiteSettings,
 } from "@/lib/api/public";
+import { cn } from "@/lib/cn";
 import { formatCount, formatHours, toParagraphs } from "@/lib/format";
 import { FEATURED_SERVICES } from "@/lib/navigation";
 import { pageMetadata } from "@/lib/page-metadata";
@@ -50,6 +51,14 @@ export default async function HomePage() {
   const whatsappHref = buildWhatsAppUrl(settings.whatsapp, settings.whatsappDefaultMessage);
   const galleryPreview = gallery.slice(0, 5);
   const [storyLead] = toParagraphs(about.text.story);
+  const lineage = [
+    about.text.gen1Name,
+    about.text.gen2Name,
+    about.text.gen3Name,
+    about.text.gen4Name,
+  ]
+    .map((n) => n.trim())
+    .filter(Boolean);
   const t = page.text;
 
   return (
@@ -161,6 +170,39 @@ export default async function HomePage() {
             <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-4">
               <SectionHeader eyebrow={t.legacyEyebrow} title={t.legacyTitle} />
               <p className="m-0 text-base leading-[1.75] text-ink-muted">{storyLead}</p>
+              {lineage.length > 0 && (
+                <ol
+                  aria-label={about.text.familyEyebrow}
+                  className="m-0 flex list-none flex-wrap items-center gap-x-2 gap-y-2.5 p-0"
+                >
+                  {lineage.map((name, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      {i > 0 && <span aria-hidden="true" className="h-px w-5 bg-gold-500/60" />}
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-2 rounded-full border py-1 pr-3.5 pl-1 text-[13px] font-semibold",
+                          i === lineage.length - 1
+                            ? "border-gold-500 bg-cocoa-900 text-cream-50"
+                            : "border-gold-500/40 bg-cream-50 text-cocoa-900",
+                        )}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "flex size-6 items-center justify-center rounded-full font-serif text-[11px]",
+                            i === lineage.length - 1
+                              ? "bg-gold-300 text-cocoa-900"
+                              : "bg-cocoa-900 text-gold-300",
+                          )}
+                        >
+                          {["I", "II", "III", "IV"][i]}
+                        </span>
+                        {name}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              )}
               <ArrowLink href="/about" label={t.legacyLink} className="self-start font-bold" />
             </div>
           </div>
