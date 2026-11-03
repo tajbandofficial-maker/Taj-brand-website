@@ -1,0 +1,6 @@
+{
+  "sourceDir": "/photos/",
+  "outputDir": "/photos-opt/",
+  "widths": [256, 384, 640, 828, 1080, 1536],
+  "quality": 75
+}

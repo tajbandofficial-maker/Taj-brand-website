@@ -1,6 +1,8 @@
+import { useId } from "react";
+
 import { cn } from "@/lib/cn";
 
-import type { FieldTone } from "./field-styles";
+import { errorTextClasses, type FieldTone } from "./field-styles";
 
 type Option = { value: string; label: string };
 
@@ -12,6 +14,7 @@ type Props = {
   value: string[];
   onChange: (next: string[]) => void;
   tone?: FieldTone;
+  error?: string;
 };
 
 /** Multi-select toggle chips (aria-pressed buttons) inside a fieldset. */
@@ -22,12 +25,18 @@ export function ChipGroup({
   value,
   onChange,
   tone = "light",
+  error,
 }: Props) {
+  const errorId = `${useId()}-error`;
   const toggle = (v: string) =>
     onChange(value.includes(v) ? value.filter((x) => x !== v) : [...value, v]);
 
   return (
-    <fieldset className="m-0 border-0 p-0">
+    <fieldset
+      className="m-0 border-0 p-0"
+      aria-invalid={error ? true : undefined}
+      aria-describedby={error ? errorId : undefined}
+    >
       <legend
         className={cn(
           showLegend ? "mb-2.5 text-sm font-semibold" : "sr-only",
@@ -61,6 +70,11 @@ export function ChipGroup({
           );
         })}
       </div>
+      {error && (
+        <p id={errorId} className={errorTextClasses(tone)}>
+          {error}
+        </p>
+      )}
     </fieldset>
   );
 }

@@ -1,6 +1,6 @@
 import type { ImageAsset } from "@taj/types";
-import Image from "next/image";
 
+import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -27,7 +27,7 @@ export function ImageFrame({
   return (
     <div className={cn("relative overflow-hidden bg-cocoa-800", className)}>
       {image ? (
-        <Image
+        <SmartImage
           src={image.url}
           alt={image.alt}
           fill

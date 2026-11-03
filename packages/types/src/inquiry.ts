@@ -12,9 +12,9 @@ export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export type InquiryFormValues = {
   name: string;
   phone: string;
-  /** Optional: where the confirmation email goes. */
+  /** Where the confirmation email goes. */
   email: string;
-  /** YYYY-MM-DD or "" */
+  /** YYYY-MM-DD */
   weddingDate: string;
   venue: string;
   /** Service slugs */
@@ -48,8 +48,16 @@ function isTodayOrLater(value: string): boolean {
   return picked >= today;
 }
 
-/** Returns one message per invalid field; `{}` means valid. */
-export function validateInquiryForm(v: InquiryFormValues): InquiryErrors {
+export type InquiryValidationOptions = {
+  /** Require the message box (only where the form shows it). */
+  requireMessage?: boolean;
+};
+
+/** Returns one message per invalid field; `{}` means valid. Every field is required. */
+export function validateInquiryForm(
+  v: InquiryFormValues,
+  { requireMessage = false }: InquiryValidationOptions = {},
+): InquiryErrors {
   const errors: InquiryErrors = {};
   const name = v.name.trim();
   if (name.length < 2) errors.name = "Please enter your name";
@@ -59,15 +67,24 @@ export function validateInquiryForm(v: InquiryFormValues): InquiryErrors {
     errors.phone = "Enter a valid 10-digit Indian mobile number";
   }
   const email = v.email.trim();
-  if (email !== "" && (email.length > 120 || !EMAIL_REGEX.test(email))) {
-    errors.email = "Enter a valid email address, or leave it empty";
+  if (email === "") errors.email = "Please enter your email address";
+  else if (email.length > 120 || !EMAIL_REGEX.test(email)) {
+    errors.email = "Enter a valid email address";
   }
-  if (v.weddingDate !== "" && !isTodayOrLater(v.weddingDate)) {
-    errors.weddingDate = "Pick today or a later date";
-  }
-  if (v.venue.trim().length > 120) errors.venue = "Keep this under 120 characters";
-  if (!Array.isArray(v.services) || v.services.length > 10) errors.services = "Too many services";
-  if (v.message.trim().length > 1000) errors.message = "Keep this under 1000 characters";
+  if (v.weddingDate === "") errors.weddingDate = "Please pick your wedding date";
+  else if (!isTodayOrLater(v.weddingDate)) errors.weddingDate = "Pick today or a later date";
+
+  const venue = v.venue.trim();
+  if (venue.length < 2) errors.venue = "Please enter the venue or area";
+  else if (venue.length > 120) errors.venue = "Keep this under 120 characters";
+
+  if (!Array.isArray(v.services) || v.services.length === 0) {
+    errors.services = "Please choose at least one service";
+  } else if (v.services.length > 10) errors.services = "Too many services";
+
+  const message = v.message.trim();
+  if (requireMessage && message === "") errors.message = "Please tell us a little about your event";
+  else if (message.length > 1000) errors.message = "Keep this under 1000 characters";
   if (v.sourcePage.length > 200) errors.sourcePage = "Invalid source page";
   return errors;
 }

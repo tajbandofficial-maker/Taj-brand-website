@@ -2,9 +2,9 @@
 
 import type { GalleryImage } from "@taj/types";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useRef } from "react";
 
+import { SmartImage } from "@/components/ui/SmartImage";
 import { useGalleryStore } from "@/stores/gallery-store";
 
 /** Modal image viewer: arrow keys, swipe, ESC to close (native <dialog>). */
@@ -54,7 +54,7 @@ export function Lightbox({ images }: { images: GalleryImage[] }) {
       {item && (
         <div className="relative flex h-full w-full items-center justify-center p-4 sm:p-12">
           <div className="relative h-full w-full max-w-5xl">
-            <Image
+            <SmartImage
               src={item.image.url}
               alt={item.image.alt}
               fill

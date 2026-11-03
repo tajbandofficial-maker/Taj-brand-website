@@ -1,8 +1,9 @@
 "use client";
 
 import type { GalleryVideo } from "@taj/types";
-import Image from "next/image";
 import { useState } from "react";
+
+import { SmartImage } from "@/components/ui/SmartImage";
 
 /**
  * YouTube facade: shows the poster until tapped, then loads the
@@ -14,7 +15,7 @@ export function VideoCard({ video }: { video: GalleryVideo }) {
 
   const poster = (
     <>
-      <Image
+      <SmartImage
         src={video.poster.url}
         alt={video.poster.alt}
         fill

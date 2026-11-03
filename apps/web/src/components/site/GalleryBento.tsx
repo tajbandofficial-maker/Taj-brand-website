@@ -1,9 +1,9 @@
 "use client";
 
 import type { GalleryCategory, GalleryImage } from "@taj/types";
-import Image from "next/image";
 import { useEffect, useMemo } from "react";
 
+import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/cn";
 import { bentoPattern, categoryFromSlug, galleryCategoryMeta } from "@/lib/gallery";
 import { type GalleryFilter, useGalleryStore } from "@/stores/gallery-store";
@@ -83,7 +83,7 @@ export function GalleryBento({ images }: { images: GalleryImage[] }) {
                 aria-label={`View larger: ${item.image.alt}`}
                 className="group absolute inset-0 cursor-zoom-in overflow-hidden rounded-[14px] bg-cocoa-800"
               >
-                <Image
+                <SmartImage
                   src={item.image.url}
                   alt={item.image.alt}
                   fill

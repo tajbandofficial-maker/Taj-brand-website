@@ -46,6 +46,8 @@ export function InquiryForm({
   submitLabel,
 }: Props) {
   const uid = useId();
+  // Every field is required; the message box only exists in the full variant.
+  const requireMessage = variant === "full";
   const id = (name: string) => `${uid}-${name}`;
   const draftReady = useRef(false);
   const saveDraft = useInquiryStore((s) => s.saveDraft);
@@ -53,10 +55,10 @@ export function InquiryForm({
 
   const formik = useFormik<InquiryFormValues>({
     initialValues: { ...emptyInquiryForm, services: defaultServices, sourcePage },
-    validate: validateInquiryForm,
+    validate: (values) => validateInquiryForm(values, { requireMessage }),
     onSubmit: async (values, helpers) => {
       helpers.setStatus(undefined);
-      const result = await submitInquiry(values);
+      const result = await submitInquiry(values, { requireMessage });
       if (result.ok) {
         clearDraft();
         helpers.setStatus({ kind: "success" } satisfies Status);
@@ -140,6 +142,7 @@ export function InquiryForm({
         label="Your name"
         placeholder="Your name"
         autoComplete="name"
+        required
         tone={tone}
         error={err("name")}
         {...formik.getFieldProps("name")}
@@ -151,17 +154,19 @@ export function InquiryForm({
         type="tel"
         inputMode="tel"
         autoComplete="tel"
+        required
         tone={tone}
         error={err("phone")}
         {...formik.getFieldProps("phone")}
       />
       <TextField
         id={id("email")}
-        label="Email (optional) — we'll send you a confirmation"
-        placeholder="Email (optional, for a confirmation)"
+        label="Email — we'll send you a confirmation"
+        placeholder="Email address"
         type="email"
         inputMode="email"
         autoComplete="email"
+        required
         tone={tone}
         error={err("email")}
         {...formik.getFieldProps("email")}
@@ -170,7 +175,9 @@ export function InquiryForm({
         <TextField
           id={id("weddingDate")}
           label="Wedding date"
+          placeholder="Wedding date"
           type="date"
+          required
           tone={tone}
           error={err("weddingDate")}
           {...formik.getFieldProps("weddingDate")}
@@ -179,6 +186,7 @@ export function InquiryForm({
           id={id("venue")}
           label="Venue or area"
           placeholder="Venue / area"
+          required
           tone={tone}
           error={err("venue")}
           {...formik.getFieldProps("venue")}
@@ -191,6 +199,7 @@ export function InquiryForm({
         options={serviceOptions}
         value={formik.values.services}
         onChange={(next) => void formik.setFieldValue("services", next)}
+        error={err("services")}
         tone={tone}
       />
 
@@ -200,6 +209,7 @@ export function InquiryForm({
           label="Anything else"
           placeholder="Anything else? Guest count, timings, songs…"
           rows={3}
+          required
           tone={tone}
           error={err("message")}
           {...formik.getFieldProps("message")}

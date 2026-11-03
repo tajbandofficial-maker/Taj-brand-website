@@ -4,6 +4,7 @@ import {
   coerceInquiryForm,
   type InquiryErrors,
   type InquiryFormValues,
+  type InquiryValidationOptions,
   normalizeIndianMobile,
   validateInquiryForm,
 } from "@taj/types/inquiry";
@@ -15,10 +16,15 @@ export type SubmitInquiryResult =
   { ok: true } | { ok: false; message: string; fieldErrors?: InquiryErrors };
 
 /** Server Action: validate again server-side, then forward to NestJS (§6.6). */
-export async function submitInquiry(input: InquiryFormValues): Promise<SubmitInquiryResult> {
+export async function submitInquiry(
+  input: InquiryFormValues,
+  options: InquiryValidationOptions = {},
+): Promise<SubmitInquiryResult> {
   // Action payloads are untrusted: coerce the shape before validating.
   const values = coerceInquiryForm(input);
-  const fieldErrors = validateInquiryForm(values);
+  const fieldErrors = validateInquiryForm(values, {
+    requireMessage: options?.requireMessage === true,
+  });
   if (Object.keys(fieldErrors).length > 0) {
     return { ok: false, message: "Please check the highlighted fields.", fieldErrors };
   }
