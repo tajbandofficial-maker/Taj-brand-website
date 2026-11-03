@@ -5,7 +5,7 @@ import { JourneyMap } from "@/components/site/JourneyMap";
 import { Reveal } from "@/components/site/Reveal";
 import { ReviewCard } from "@/components/site/ReviewCard";
 import { ServiceCard } from "@/components/site/ServiceCard";
-import { VideoCard } from "@/components/site/VideoCard";
+import { VideoGallery } from "@/components/site/VideoGallery";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { CtaPanel } from "@/components/ui/CtaPanel";
@@ -215,11 +215,10 @@ export default async function AboutPage() {
             action={{ label: "More in the gallery", href: "/gallery" }}
             className="mb-6"
           />
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
-            {videos.map((v) => (
-              <VideoCard key={v.id} video={v} />
-            ))}
-          </div>
+          <VideoGallery
+            videos={videos}
+            className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4"
+          />
         </Section>
       )}
 

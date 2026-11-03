@@ -11,7 +11,6 @@ type GalleryState = {
   lightboxIndex: number | null;
   openLightbox: (index: number) => void;
   closeLightbox: () => void;
-  step: (delta: 1 | -1, total: number) => void;
 };
 
 export const useGalleryStore = create<GalleryState>()((set) => ({
@@ -21,8 +20,4 @@ export const useGalleryStore = create<GalleryState>()((set) => ({
   lightboxIndex: null,
   openLightbox: (lightboxIndex) => set({ lightboxIndex }),
   closeLightbox: () => set({ lightboxIndex: null }),
-  step: (delta, total) =>
-    set((s) =>
-      s.lightboxIndex === null ? s : { lightboxIndex: (s.lightboxIndex + delta + total) % total },
-    ),
 }));

@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 
+import { GalleryPreview } from "@/components/site/GalleryPreview";
 import { InquiryForm } from "@/components/site/InquiryForm";
 import { JourneyMap } from "@/components/site/JourneyMap";
 import { Marquee } from "@/components/site/Marquee";
 import { PackageCard } from "@/components/site/PackageCard";
 import { ReviewCard } from "@/components/site/ReviewCard";
 import { ServiceCard } from "@/components/site/ServiceCard";
-import { VideoCard } from "@/components/site/VideoCard";
+import { VideoGallery } from "@/components/site/VideoGallery";
 import { ArrowLink } from "@/components/ui/ArrowLink";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -25,7 +26,6 @@ import {
   getServices,
   getSiteSettings,
 } from "@/lib/api/public";
-import { cn } from "@/lib/cn";
 import { formatCount, formatHours, toParagraphs } from "@/lib/format";
 import { FEATURED_SERVICES } from "@/lib/navigation";
 import { pageMetadata } from "@/lib/page-metadata";
@@ -215,16 +215,7 @@ export default async function HomePage() {
           action={{ label: "Photos & videos", href: "/gallery" }}
           className="mb-7"
         />
-        <div className="grid auto-rows-[clamp(150px,18vw,210px)] grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] gap-3">
-          {galleryPreview.map((g, i) => (
-            <ImageFrame
-              key={g.id}
-              image={g.image}
-              sizes={i === 0 ? "(min-width: 700px) 480px, 100vw" : "(min-width: 700px) 240px, 50vw"}
-              className={cn("rounded-[14px]", i === 0 && "col-span-2 row-span-2")}
-            />
-          ))}
-        </div>
+        <GalleryPreview images={galleryPreview} />
       </Section>
 
       {/* ── Featured video ───────────────────────────────────── */}
@@ -232,7 +223,7 @@ export default async function HomePage() {
         <Section tone="dark" spacing="compact">
           <div className="mx-auto flex max-w-[860px] flex-col gap-6">
             <SectionHeader tone="dark" eyebrow={t.videoEyebrow} title={t.videoTitle} />
-            <VideoCard video={page.video} />
+            <VideoGallery videos={[page.video]} />
           </div>
         </Section>
       )}

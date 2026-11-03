@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { GalleryBento } from "@/components/site/GalleryBento";
-import { VideoCard } from "@/components/site/VideoCard";
+import { VideoGallery } from "@/components/site/VideoGallery";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -36,11 +36,10 @@ export default async function GalleryPage() {
             description={t.videosText}
             className="mb-6"
           />
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
-            {videos.map((v) => (
-              <VideoCard key={v.id} video={v} />
-            ))}
-          </div>
+          <VideoGallery
+            videos={videos}
+            className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4"
+          />
         </Section>
       )}
     </>

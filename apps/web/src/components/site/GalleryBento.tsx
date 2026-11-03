@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { bentoPattern, categoryFromSlug, galleryCategoryMeta } from "@/lib/gallery";
 import { type GalleryFilter, useGalleryStore } from "@/stores/gallery-store";
 
-import { Lightbox } from "./Lightbox";
+import { type MediaItem, MediaLightbox } from "./MediaLightbox";
 
 const spanClass = { 1: "", 2: "col-span-2" } as const;
 const rowClass = { 1: "", 2: "row-span-2" } as const;
@@ -17,7 +17,9 @@ const rowClass = { 1: "", 2: "row-span-2" } as const;
 export function GalleryBento({ images }: { images: GalleryImage[] }) {
   const filter = useGalleryStore((s) => s.filter);
   const setFilter = useGalleryStore((s) => s.setFilter);
+  const lightboxIndex = useGalleryStore((s) => s.lightboxIndex);
   const openLightbox = useGalleryStore((s) => s.openLightbox);
+  const closeLightbox = useGalleryStore((s) => s.closeLightbox);
 
   // URL → store on first load (shared links).
   useEffect(() => {
@@ -38,7 +40,21 @@ export function GalleryBento({ images }: { images: GalleryImage[] }) {
     "ALL",
     ...(Object.keys(galleryCategoryMeta) as GalleryCategory[]).filter((c) => present.has(c)),
   ];
-  const visible = filter === "ALL" ? images : images.filter((i) => i.category === filter);
+  const visible = useMemo(
+    () => (filter === "ALL" ? images : images.filter((i) => i.category === filter)),
+    [images, filter],
+  );
+  const media = useMemo<MediaItem[]>(
+    () =>
+      visible.map((i) => ({
+        kind: "image",
+        id: i.id,
+        image: i.image,
+        caption: i.caption,
+        label: galleryCategoryMeta[i.category].label,
+      })),
+    [visible],
+  );
 
   return (
     <>
@@ -98,7 +114,13 @@ export function GalleryBento({ images }: { images: GalleryImage[] }) {
         })}
       </ul>
 
-      <Lightbox images={visible} />
+      <MediaLightbox
+        items={media}
+        index={lightboxIndex}
+        onIndexChange={openLightbox}
+        onClose={closeLightbox}
+        title="Taj Band · Gallery"
+      />
     </>
   );
 }
