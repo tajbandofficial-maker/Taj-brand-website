@@ -1,5 +1,5 @@
 /**
- * Renders the inquiry emails with the real Site settings and a sample enquiry
+ * Renders the inquiry and password-reset emails with the real Site settings and a sample enquiry
  * into email-previews/*.html — open them in a browser to check the design.
  *   pnpm --filter api email:preview   → write the HTML files
  *   pnpm --filter api email:test      → also send both to BUSINESS_EMAIL
@@ -14,6 +14,7 @@ import type { ConfigService } from "@nestjs/config";
 
 import { type Env, validateEnv } from "../src/config/env.schema.js";
 import { type Inquiry, InquiryStatus, PrismaClient } from "../src/generated/prisma/client.js";
+import { passwordResetEmail } from "../src/modules/notifications/auth-emails.js";
 import {
   clientInquiryEmail,
   teamInquiryEmail,
@@ -57,6 +58,16 @@ async function main() {
   const mails = [
     ["inquiry-to-client.html", clientInquiryEmail(input)],
     ["inquiry-to-team.html", teamInquiryEmail(input)],
+    [
+      "password-reset.html",
+      passwordResetEmail({
+        brand: input.brand,
+        adminEmail: "admin@tajband.local",
+        link: `${input.brand.siteUrl}/admin/reset-password?token=preview-token`,
+        minutes: 30,
+        requestedAt: new Date(),
+      }),
+    ],
   ] as const;
   for (const [file, mail] of mails) {
     writeFileSync(join(out, file), mail.html);

@@ -2,6 +2,7 @@
 
 import { useFormik } from "formik";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -19,6 +20,7 @@ export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const justReset = params.get("reset") === "1";
 
   const formik = useFormik<Values>({
     initialValues: { email: "", password: "" },
@@ -49,6 +51,14 @@ export function LoginForm() {
 
   return (
     <form noValidate onSubmit={formik.handleSubmit} className="flex flex-col gap-4">
+      {justReset && !error && (
+        <p
+          role="status"
+          className="m-0 rounded-lg border border-[#b9dfc4] bg-[#e8f5ec] px-3 py-2 text-sm text-[#1d5c33]"
+        >
+          Password changed. Sign in with your new password.
+        </p>
+      )}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="email" className="text-sm font-semibold">
           Email
@@ -67,9 +77,17 @@ export function LoginForm() {
         )}
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-semibold">
-          Password
-        </label>
+        <div className="flex items-baseline justify-between gap-3">
+          <label htmlFor="password" className="text-sm font-semibold">
+            Password
+          </label>
+          <Link
+            href="/admin/forgot-password"
+            className="text-[13px] font-semibold text-gold-700 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <input
           id="password"
           type="password"

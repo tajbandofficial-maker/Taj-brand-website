@@ -5,7 +5,7 @@ import { Throttle } from "@nestjs/throttler";
 import { AdminApi } from "../../common/admin.decorator.js";
 import { IpThrottlerGuard } from "../../common/guards/ip-throttler.guard.js";
 import { type AuthedRequest, JwtAuthGuard } from "../../common/guards/jwt-auth.guard.js";
-import { LoginDto } from "./auth.dto.js";
+import { ForgotPasswordDto, LoginDto, ResetPasswordDto } from "./auth.dto.js";
 import { AuthService } from "./auth.service.js";
 
 @ApiTags("auth")
@@ -20,6 +20,28 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto.email, dto.password);
+  }
+
+  /**
+   * Emails a reset link to the official inbox. Same reply whether or not the email has an
+   * account; 3 requests per 10 minutes per visitor IP.
+   */
+  @Post("forgot-password")
+  @HttpCode(202)
+  @UseGuards(IpThrottlerGuard)
+  @Throttle({ default: { limit: 3, ttl: 600_000 } })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.auth.forgotPassword(dto.email);
+    return { ok: true };
+  }
+
+  /** Sets a new password from a reset link. 10 attempts per 10 minutes per visitor IP. */
+  @Post("reset-password")
+  @HttpCode(200)
+  @UseGuards(IpThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 600_000 } })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.auth.resetPassword(dto.token, dto.password);
   }
 
   @Get("me")

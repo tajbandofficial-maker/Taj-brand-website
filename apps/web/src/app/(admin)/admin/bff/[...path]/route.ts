@@ -11,6 +11,32 @@ import { env } from "@/lib/env";
 
 const SEGMENT = /^[A-Za-z0-9_-]+$/;
 
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).host.toLowerCase();
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * True when the request's Origin is this site. Compares host names only: behind a proxy that
+ * terminates HTTPS without sending x-forwarded-proto (Hostinger), Next sees its own URL as
+ * http://, so a strict origin comparison would reject every save.
+ */
+function sameSite(request: NextRequest): boolean {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  const host = hostOf(origin);
+  const own = [
+    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim(),
+    request.headers.get("host"),
+    request.nextUrl.host,
+    hostOf(env.NEXT_PUBLIC_SITE_URL),
+  ];
+  return host !== null && own.some((h) => h?.toLowerCase() === host);
+}
+
 async function forward(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;
   // Every segment must be a plain identifier: no "..", encoded slashes or dots,
@@ -23,14 +49,11 @@ async function forward(request: NextRequest, { params }: { params: Promise<{ pat
   }
 
   // CSRF defence in depth (the cookie is already SameSite=Strict).
-  if (request.method !== "GET") {
-    const origin = request.headers.get("origin");
-    if (origin && origin !== request.nextUrl.origin) {
-      return NextResponse.json(
-        { statusCode: 403, message: "Bad origin", error: "Forbidden" },
-        { status: 403 },
-      );
-    }
+  if (request.method !== "GET" && !sameSite(request)) {
+    return NextResponse.json(
+      { statusCode: 403, message: "Bad origin", error: "Forbidden" },
+      { status: 403 },
+    );
   }
 
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
