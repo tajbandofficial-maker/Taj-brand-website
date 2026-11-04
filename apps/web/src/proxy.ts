@@ -13,6 +13,11 @@ export function proxy(request: NextRequest) {
   const loggedIn = Boolean(token && !isTokenExpired(token));
   const isLogin = pathname === "/admin/login";
 
+  // Password reset pages work without a session.
+  if (pathname === "/admin/forgot-password" || pathname === "/admin/reset-password") {
+    return NextResponse.next();
+  }
+
   if (isLogin) {
     return loggedIn ? NextResponse.redirect(new URL("/admin", request.url)) : NextResponse.next();
   }

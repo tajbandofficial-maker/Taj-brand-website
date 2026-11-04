@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 
 import type { Env } from "../../config/env.schema.js";
+import { NotificationsService } from "../notifications/notifications.service.js";
 import { AdminMeController, AuthController } from "./auth.controller.js";
 import { AuthService, SESSION_TTL_SECONDS } from "./auth.service.js";
 
@@ -18,6 +19,6 @@ import { AuthService, SESSION_TTL_SECONDS } from "./auth.service.js";
     }),
   ],
   controllers: [AuthController, AdminMeController],
-  providers: [AuthService],
+  providers: [AuthService, NotificationsService],
 })
 export class AuthModule {}
