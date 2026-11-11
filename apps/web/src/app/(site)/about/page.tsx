@@ -33,7 +33,8 @@ export function generateMetadata(): Promise<Metadata> {
   return pageMetadata("about");
 }
 
-const statClass = "flex flex-col gap-1 rounded-2xl border border-gold-500/50 px-6 py-5";
+const statClass =
+  "flex flex-col gap-1 rounded-2xl border border-gold-500/50 bg-cocoa-900/45 px-6 py-5 backdrop-blur-[2px]";
 
 export default async function AboutPage() {
   const [page, settings, services, gallery, galleryVideos, reviews] = await Promise.all([
@@ -124,43 +125,45 @@ export default async function AboutPage() {
             </div>
           </div>
         </Container>
-      </section>
 
-      {/* ── Numbers ──────────────────────────────────────────── */}
-      {(settings.foundedYear || settings.googleReviewCount !== null) && (
-        <Section tone="dark" spacing="flush-top">
-          <div className="stagger grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-3 [--stagger-start:400ms]">
-            {settings.foundedYear && (
-              <div className={statClass}>
-                <span className="font-serif text-[44px] leading-none">{settings.foundedYear}</span>
-                <span className="text-[13px] text-sand-200">The year it all began</span>
-              </div>
-            )}
-            {years !== null && years > 0 && (
-              <div className={statClass}>
-                <span className="font-serif text-[44px] leading-none">
-                  <CountUp to={years} />+
-                </span>
-                <span className="text-[13px] text-sand-200">Years of baraats</span>
-              </div>
-            )}
-            {settings.googleReviewCount !== null && (
-              <div className={statClass}>
-                <span className="font-serif text-[44px] leading-none">
-                  <CountUp to={settings.googleReviewCount} />+
-                </span>
-                <span className="text-[13px] text-sand-200">Google reviews</span>
-              </div>
-            )}
-            {services.length > 0 && (
-              <div className={statClass}>
-                <span className="font-serif text-[44px] leading-none">{services.length}</span>
-                <span className="text-[13px] text-sand-200">Services under one roof</span>
-              </div>
-            )}
-          </div>
-        </Section>
-      )}
+        {/* ── Numbers — inside the hero so its glow and dot pattern run behind them ── */}
+        {(settings.foundedYear || settings.googleReviewCount !== null) && (
+          <Container className="relative pb-[clamp(48px,7vw,88px)]">
+            <div className="stagger grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-3 [--stagger-start:400ms]">
+              {settings.foundedYear && (
+                <div className={statClass}>
+                  <span className="font-serif text-[44px] leading-none">
+                    {settings.foundedYear}
+                  </span>
+                  <span className="text-[13px] text-sand-200">The year it all began</span>
+                </div>
+              )}
+              {years !== null && years > 0 && (
+                <div className={statClass}>
+                  <span className="font-serif text-[44px] leading-none">
+                    <CountUp to={years} />+
+                  </span>
+                  <span className="text-[13px] text-sand-200">Years of baraats</span>
+                </div>
+              )}
+              {settings.googleReviewCount !== null && (
+                <div className={statClass}>
+                  <span className="font-serif text-[44px] leading-none">
+                    <CountUp to={settings.googleReviewCount} />+
+                  </span>
+                  <span className="text-[13px] text-sand-200">Google reviews</span>
+                </div>
+              )}
+              {services.length > 0 && (
+                <div className={statClass}>
+                  <span className="font-serif text-[44px] leading-none">{services.length}</span>
+                  <span className="text-[13px] text-sand-200">Services under one roof</span>
+                </div>
+              )}
+            </div>
+          </Container>
+        )}
+      </section>
 
       {/* ── Story ────────────────────────────────────────────── */}
       {story.length > 0 && (
@@ -199,6 +202,13 @@ export default async function AboutPage() {
         accent={t.familyAccent}
         text={t.familyText}
         since={settings.foundedYear}
+        photo={{
+          src: "/photos/taj-band-early-years.jpg",
+          alt: "Vintage black-and-white photo of the Taj Band brass band in uniform with their horns and drums, in front of a building with a Taj Band sign",
+          width: 1110,
+          height: 960,
+          caption: "Where it all began — the early Taj Band",
+        }}
         generations={[
           { role: t.gen1Role, name: t.gen1Name, text: t.gen1Text },
           { role: t.gen2Role, name: t.gen2Name, text: t.gen2Text },

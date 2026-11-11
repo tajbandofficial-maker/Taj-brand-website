@@ -1,12 +1,71 @@
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Section } from "@/components/ui/Section";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/cn";
 
 import { Reveal } from "./Reveal";
 
 export type Generation = { role: string; name: string; text: string };
 
+export type LegacyPhoto = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  caption: string;
+};
+
 const numerals = ["I", "II", "III", "IV", "V", "VI"];
+
+/**
+ * The old band photo as an archive print: cream paper border, warm sepia tone, a second print
+ * peeking out behind, and a gold "Est." seal. Straightens and lifts on hover.
+ */
+function ArchivePhoto({ photo, since }: { photo: LegacyPhoto; since: number | null }) {
+  return (
+    <Reveal className="mx-auto w-full max-w-[560px] px-3 lg:mx-0">
+      <figure className="group/photo relative m-0">
+        {/* Second print behind, for depth. */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 translate-x-3 translate-y-2 rotate-[3.5deg] rounded-[6px] bg-cream-100/90 shadow-[0_20px_50px_rgb(0_0_0/0.45)] transition-transform duration-700 group-hover/photo:rotate-[5deg]"
+        />
+        <div className="relative -rotate-[2deg] rounded-[6px] bg-cream-50 p-[clamp(10px,1.6vw,16px)] pb-[clamp(44px,6vw,58px)] shadow-[0_30px_70px_rgb(0_0_0/0.55)] transition-transform duration-700 ease-out group-hover/photo:-translate-y-1 group-hover/photo:rotate-0">
+          <div className="relative overflow-hidden rounded-[2px]">
+            <SmartImage
+              src={photo.src}
+              alt={photo.alt}
+              width={photo.width}
+              height={photo.height}
+              sizes="(min-width: 1024px) 540px, 92vw"
+              className="block h-auto w-full contrast-[1.05] sepia-[0.35] transition-[filter] duration-700 group-hover/photo:sepia-[0.15]"
+            />
+            {/* Aged-print vignette. */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 shadow-[inset_0_0_60px_rgb(40_20_6/0.45)]"
+            />
+          </div>
+          <figcaption className="absolute inset-x-0 bottom-0 flex h-[clamp(44px,6vw,58px)] items-center justify-center px-4 text-center font-serif text-[clamp(15px,1.6vw,18px)] text-cocoa-900 italic">
+            {photo.caption}
+          </figcaption>
+        </div>
+
+        {/* Gold seal over the corner. */}
+        {since && (
+          <span
+            aria-hidden="true"
+            className="absolute -top-5 -right-1 flex size-[clamp(72px,9vw,92px)] rotate-[10deg] flex-col items-center justify-center rounded-full bg-gradient-to-br from-gold-300 via-gold-500 to-gold-700 text-cocoa-900 shadow-[0_10px_30px_rgb(0_0_0/0.45),inset_0_0_0_3px_rgb(255_255_255/0.25)] transition-transform duration-700 group-hover/photo:rotate-0 sm:-right-4"
+          >
+            <span className="absolute inset-[5px] rounded-full border border-dashed border-cocoa-900/40" />
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase">Est.</span>
+            <span className="font-serif text-[clamp(20px,2.4vw,24px)] leading-none">{since}</span>
+          </span>
+        )}
+      </figure>
+    </Reveal>
+  );
+}
 
 /**
  * "Four generations" family timeline: gold medallions strung on a line that draws itself in
@@ -19,6 +78,7 @@ export function FamilyLegacy({
   text,
   generations,
   since,
+  photo,
 }: {
   eyebrow: string;
   title: string;
@@ -27,6 +87,8 @@ export function FamilyLegacy({
   generations: Generation[];
   /** Founded year — drawn as a large outlined watermark. */
   since: number | null;
+  /** Old band photo shown as a framed archive print beside the heading. */
+  photo?: LegacyPhoto;
 }) {
   const list = generations.filter((g) => g.name.trim());
   if (list.length === 0) return null;
@@ -44,12 +106,29 @@ export function FamilyLegacy({
         )}
       </div>
 
-      <div className="mx-auto mb-[clamp(36px,6vw,64px)] flex max-w-[720px] flex-col items-center gap-3 text-center">
-        <Eyebrow tone="dark">{eyebrow}</Eyebrow>
-        <h2 className="m-0 text-section text-cream-50">
-          {title} <em className="text-gold-shine animate-shine pr-[0.08em]">{accent}</em>
-        </h2>
-        <p className="m-0 text-lead text-sand-200">{text}</p>
+      <div
+        className={cn(
+          "mb-[clamp(40px,6vw,72px)]",
+          photo
+            ? "grid items-center gap-[clamp(36px,6vw,72px)] lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]"
+            : "mx-auto max-w-[720px]",
+        )}
+      >
+        {photo && <ArchivePhoto photo={photo} since={since} />}
+        <div
+          className={cn(
+            "flex flex-col gap-3",
+            photo
+              ? "items-center text-center lg:items-start lg:text-left"
+              : "items-center text-center",
+          )}
+        >
+          <Eyebrow tone="dark">{eyebrow}</Eyebrow>
+          <h2 className="m-0 text-section text-cream-50">
+            {title} <em className="text-gold-shine animate-shine pr-[0.08em]">{accent}</em>
+          </h2>
+          <p className="m-0 max-w-[560px] text-lead text-sand-200">{text}</p>
+        </div>
       </div>
 
       <Reveal className="group/legacy">
